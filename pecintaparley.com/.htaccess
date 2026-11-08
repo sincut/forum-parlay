@@ -1,0 +1,25 @@
+Options -Indexes
+DirectoryIndex index.html index.php
+
+<FilesMatch "^(config\.php|db\.php|README\.md|AGENTS\.md|\.gitignore|\.env|\.env\.example|\.run)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(config\.php|db\.php|README\.md|AGENTS\.md|\.gitignore|\.env|\.env\.example|\.run)$">
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), geolocation=(), payment=()"
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+</IfModule>

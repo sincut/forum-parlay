@@ -1,0 +1,68 @@
+# cara hubkan ssh ke wsl
+mkdir -p ~/.ssh
+2. Copy file key dari folder Downloads Windows (pake /mnt/c/Users/User/...)
+cp /mnt/c/Users/User/Downloads/sincut_gans ~/.ssh/sincut_gans
+3. SET PERMISSION (WAJIB 600!)
+chmod 600 ~/.ssh/sincut_gans
+
+4. Cek permission (harusnya -rw-------)
+ls -l ~/.ssh/sincut_gans
+-rw------- 1 sincut sincut 1856 Nov  9 02:20 /home/sincut/.ssh/sincut_gans
+
+# migrasi file to hosting
+rsync -avz --progress \
+-e "ssh -4 -i ~/.ssh/sincut_gans -o IdentitiesOnly=yes -p 21098" \
+  ./ \
+  anakwrpf@198.54.120.84:~/
+
+# login ke terminal ssh
+chmod 600 ~/.ssh/sincut_gans
+
+ssh -4 \
+  -i ~/.ssh/sincut_gans \
+  -o IdentitiesOnly=yes \
+  -p 21098 \
+  anakwrpf@198.54.120.84
+
+# aktifkan ssh tunel 
+ssh -i ~/.ssh/sincut_gans \
+  -o IdentitiesOnly=yes \
+  -p 21098 \
+  -N \
+  -L 127.0.0.1:3310:127.0.0.1:3306 \
+  anakwrpf@premium52.web-hosting.com
+
+#  connect to database
+
+ssh -i ~/.ssh/sincut_gans -o IdentitiesOnly=yes -p 21098 anakwrpf@premium52.web-hosting.com
+
+mysql --protocol=tcp \
+  -h 127.0.0.1 \
+  -P 3310 \
+  -u anakwrpf_sincut \
+  -p \
+  anakwrpf_asupan
+
+# jalankan satu kali setelah file fitur baru di-upload
+mysql --protocol=tcp \
+  -h 127.0.0.1 \
+  -P 3310 \
+  -u anakwrpf_sincut \
+  -p \
+  anakwrpf_asupan < sql/migrate_new_features.sql
+php scripts/migrate-video-storage.php
+
+# Hapus postingan video duplikat (jalankan di SSH setelah file fitur di-upload).
+# Panduan/file upload: docs/VIDEO-DUPLICATES.md. Tidak memerlukan migration schema.
+# Dari WSL di folder project, upload hanya file fitur ini:
+rsync -avR --progress \
+  -e "ssh -4 -i ~/.ssh/sincut_gans -o IdentitiesOnly=yes -p 21098" \
+  ./app/video-duplicates.php \
+  ./app/video-upload.php \
+  ./diah-admin/upload.php \
+  ./assets/admin.js \
+  ./scripts/deduplicate-videos.php \
+  anakwrpf@198.54.120.84:~/sharevid.site/
+
+
+
